@@ -138,7 +138,7 @@ i = tkinter.StringVar(main)
 save = tkinter.IntVar(main)
 complete = tkinter.IntVar(main, value = 0)
 
-sufprompt = tkinter.Label(main, text = "common file prefix (000)")
+sufprompt = tkinter.Label(main, text = "common file prefix")
 sufprompt.configure(font = fontset)
 sufprompt.grid(row = 0, column = 0, columnspan = 2, sticky = "W")
 sufent = tkinter.Entry(main, bd = 5, textvariable = a)
@@ -220,70 +220,66 @@ main.mainloop()
 
 
 #post GUI processing
-if(complete.get() == 1):
-	suffix = a.get()
-	chrec = b.get()
-	chlig = c.get()
-	intcut = float(f.get())
-	
-	min = int(d.get().split(":")[0])
-	max = int(d.get().split(":")[1])
-	masterlist = list(range(min, max + 1))
-	
-	store = e.get().split(",")
-	for i in range(0, len(store)):
-		if re.match(".:.", store[i]):
-			low = int(store[i].split(":")[0])
-			high = int(store[i].split(":")[1])
-			for j in range(low, high + 1):
-				try:
-					masterlist.remove(j)
-				except ValueError:
-					pass
-		else:
+suffix = a.get()
+chrec = b.get()
+chlig = c.get()
+intcut = float(f.get())
+
+min = int(d.get().split(":")[0])
+max = int(d.get().split(":")[1])
+masterlist = list(range(min, max + 1))
+
+store = e.get().split(",")
+for i in range(0, len(store)):
+	if re.match(".:.", store[i]):
+		low = int(store[i].split(":")[0])
+		high = int(store[i].split(":")[1])
+		for j in range(low, high + 1):
 			try:
-				masterlist.remove(int(store[i]))
+				masterlist.remove(j)
 			except ValueError:
 				pass
+	else:
+		try:
+			masterlist.remove(int(store[i]))
+		except ValueError:
+			pass
 
-def surfaceCheck(i):
-	modeloverlap = cmd.get_model("intrec." + str(i) + " in sasa_surface")
-	modelrec = cmd.get_model("intrec." + str(i))
+def surfaceCheck(iteration):
+	cmd.get_sasa_relative("receptor." + str(iteration), var = "b", vis = 0, quiet = 1)
+
+	cmd.select("check", selection = "chain " + chrec + " and b>0.7")
+	modeloverlap = cmd.get_model("intrec." + str(iteration) + " in check")
+	modelrec = cmd.get_model("intrec." + str(iteration))
 
 	try:
-		print(len(modeloverlap.atom) / len(modelrec.atom))
-		if (len(modeloverlap.atom) / len(modelrec.atom)) > .6:
+		if(len(modeloverlap.atom) == len(modelrec.atom)):
 			return True
 		else:
 			return False
 	except ZeroDivisionError:
 		return False
 
+	cmd.remove("check")
+
 #Load complexes and display as cartoon.
 linew = "" #assign value as empty string before additions can be made
 if (complete.get() == 1):
-	fname = "model." + suffix + '.' + "{:02d}".format(int(masterlist[0]))
-	cmd.load(h.get() + "/" + fname + '.pdb')
-
-	cmd.select("selrec", selection = "chain " + chrec)
-
-	cmd.get_sasa_relative("selrec", var = "b", vis = 0, quiet = 1)
-	cmd.select("sasa_surface", selection = "selrec" + " and b>0.3")
-
+	
+	
 	for i in masterlist: #uses masterlist of all entries to be processed
 		linew += str(i) + "    " #stores model number at left side then applys a tab
-		fname = 'model.' + suffix + ".{:02d}".format(int(i)) #stores as a string the filename to load into pymol
+		fname = suffix + '.' + str(i) #stores as a string the filename to load into pymol
 		cmd.load(h.get() + "/" + fname + '.pdb') #loads in fname model
-
-# =============================================================================
-# 		#Choose receptor and ligand
-# 		cmd.select("receptor." + str(i), selection = fname + " and chain " + chrec) #selects receptor by the name receptor.[modelnumber]
-# 		cmd.select("ligand." + str(i), selection = fname + " and chain " + chlig) #selects ligand by the name ligand.[modelnumber]
-# =============================================================================
+		cmd.show("cartoon", fname) #displays model as cartoon
+	
+		#Choose receptor and ligand
+		cmd.select("receptor." + str(i), selection = fname + " and chain " + chrec) #selects receptor by the name receptor.[modelnumber]
+		cmd.select("ligand." + str(i), selection = fname + " and chain " + chlig) #selects ligand by the name ligand.[modelnumber]
 
 		#Get interface
-		cmd.select("intrec." + str(i), selection = "byres rec.pdb within " + str(intcut) + " of lig." + suffix + '.' + "{:02d}".format(int(i))) #selects receptor interface by all residues that have atoms within [intcut]
-		cmd.select("intlig." + str(i), selection = "byres lig." + suffix + '.' + "{:02d}".format(int(i)) + " within " + str(intcut) + " of rec.pdb") #selects ligand interface by all residues that have atoms within [intcut]
+		cmd.select("intrec." + str(i), selection = "byres receptor." + str(i) + " within " + str(intcut) + " of ligand." + str(i)) #selects receptor interface by all residues that have atoms within [intcut]
+		cmd.select("intlig." + str(i), selection = "byres ligand." + str(i) + " within " + str(intcut) + " of receptor." + str(i)) #selects ligand interface by all residues that have atoms within [intcut]
 	
 		go = surfaceCheck(i)
 	
