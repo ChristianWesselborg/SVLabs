@@ -20,9 +20,13 @@ Assumes all necessary input files (docking results)  are present in the current 
 Assumes the chain ids of receptor and ligand are unique (no common chain IDs between receptor and ligand) 
 '''
 
+#ititialize
 from pymol import cmd
 
 import re
+
+#clear PyMOL
+cmd.delete("all")
 
 #GUI setup
 import os
@@ -116,7 +120,7 @@ def clr():
 main = tkinter.Tk()
 main.title("Settings configuration")
 
-w = 700
+w = 1000
 h = 400
 ws = main.winfo_screenwidth() # width of the screen
 hs = main.winfo_screenheight() # height of the screen
