@@ -16,7 +16,7 @@ def resadd(resn, resi, chain):
 		reslist.append([resn,resi,chain])
 
 reslist = []
-cmd.iterate("only","resadd(resn,resi,chain)")
+cmd.iterate("rest","resadd(resn,resi,chain)")
 
 hold = ""
 for i in reslist:
@@ -25,6 +25,6 @@ for i in reslist:
 	temp = temp.split(",")
 	hold += temp[0] + temp[1] + temp[2] + "\n"
 
-f = open("g:/research/belfortlocalfiles/misc/pdb extract/dim_lateralA2T_reslist.txt", 'w')
+f = open("c:/Users/WESSEC/Documents/Research/RPI GB/misc/pdb extract/6IRA_reslist.txt", 'w')
 f.write(hold)
 f.close()

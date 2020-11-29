@@ -265,28 +265,21 @@ if (complete.get() == 1):
 	fname = "model." + suffix + '.' + "{:02d}".format(int(masterlist[0]))
 	cmd.load(h.get() + "/" + fname + '.pdb')
 
-	cmd.select("selrec", selection = "chain " + chrec)
+	cmd.get_sasa_relative("rec." + str(masterlist[0]) + ".pdb", var = "b", vis = 1, quiet = 1)
+	cmd.select("sasa_surface", selection = "rec." + str(masterlist[0]) + ".pdb" + " and b>0.3")
+	print("rec." + str(masterlist[0]) + ".pdb" + " and b>0.3")
 
-	cmd.get_sasa_relative("selrec", var = "b", vis = 0, quiet = 1)
-	cmd.select("sasa_surface", selection = "selrec" + " and b>0.3")
-
-	for i in masterlist: #uses masterlist of all entries to be processed
+	for i in masterlist[1:]: #uses masterlist of all entries to be processed
 		linew += str(i) + "    " #stores model number at left side then applys a tab
 		fname = 'model.' + suffix + ".{:02d}".format(int(i)) #stores as a string the filename to load into pymol
 		cmd.load(h.get() + "/" + fname + '.pdb') #loads in fname model
 
-# =============================================================================
-# 		#Choose receptor and ligand
-# 		cmd.select("receptor." + str(i), selection = fname + " and chain " + chrec) #selects receptor by the name receptor.[modelnumber]
-# 		cmd.select("ligand." + str(i), selection = fname + " and chain " + chlig) #selects ligand by the name ligand.[modelnumber]
-# =============================================================================
-
 		#Get interface
-		cmd.select("intrec." + str(i), selection = "byres rec.pdb within " + str(intcut) + " of lig." + suffix + '.' + "{:02d}".format(int(i))) #selects receptor interface by all residues that have atoms within [intcut]
-		cmd.select("intlig." + str(i), selection = "byres lig." + suffix + '.' + "{:02d}".format(int(i)) + " within " + str(intcut) + " of rec.pdb") #selects ligand interface by all residues that have atoms within [intcut]
-	
+		cmd.select("intrec." + str(i), selection = "byres rec." + str(i) + ".pdb within " + str(intcut) + " of lig." + suffix + '.' + "{:02d}".format(int(i))) #selects receptor interface by all residues that have atoms within [intcut]
+		cmd.select("intlig." + str(i), selection = "byres lig." + suffix + '.' + "{:02d}".format(int(i)) + " within " + str(intcut) + " of rec." + str(i) + ".pdb") #selects ligand interface by all residues that have atoms within [intcut]
+
 		go = surfaceCheck(i)
-	
+
 		#Write residue list to linew store
 		if go:
 			for sel in ["intrec." + str(i), "intlig." + str(i)]:
